@@ -1,0 +1,17 @@
+# virtual environment
+pyvenv.cfg
+bin/
+include/
+lib/
+
+# distribution
+dist/
+etc/
+*.eggs
+.ipynb_checkpoints/
+*.egg-info
+share/
+*.log
+
+# testing
+*.ipynb
