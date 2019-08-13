@@ -5,17 +5,31 @@ define([
     './Chart'
 ], function($, utils, Jupyter) {
     "use strict";
-    
+
+    /**
+     * Get the cluster status from the backend endpoint /clusterstatus/metrics
+     * 
+     * @returns {Promise} raw cluster status metrics or a failure message
+     */
     function getClusterStatus() {
         return new Promise(function(resolve, reject) {
-            $.getJSON(utils.get_body_data('baseUrl') + 'clusterstatus', function(data) {
+            $.getJSON(utils.get_body_data('baseUrl') + 'clusterstatus/metrics', function(data) {
                 resolve(data);
             }).fail(function() {
                 reject('could not retrieve cluster status');
             });
         });
     }
-
+    /**
+     * Decide on the color that a particular chart js bar will have.
+     * 
+     * Colors are based off bootstrap 3 theme for bars.
+     * https://www.w3schools.com/bootstrap/bootstrap_progressbars.asp
+     * 
+     * @param {float} inUse percent from 1 - 100 that's in use
+     * @param {boolean} isBackground controls opacity, if true will be lightly opaque
+     * @return {string} string formatted rgba value, ex. rgba(92, 184, 92, 1)
+     */
     function decideRgbFormat(inUse, isBackground) {
         if (inUse <= 33.3) {
             var rgb = 'rgba(92, 184, 92, '
@@ -30,6 +44,14 @@ define([
         return finalRgb
     }
 
+    /**
+     * 
+     * Will create the data object used by chart.js given the clusterStatus object. Highly
+     * coupled to bar chart and many hardcoded values.
+     * 
+     * @param {object} clusterStatus Retrieved cluster status
+     * @returns {object} the formatted data object for chart.js
+     */
     function formatClusterStatus(clusterStatus) {
 
         var cpuCores = (clusterStatus['CPU cores'][0] / clusterStatus['CPU cores'][1] * 100).toPrecision(2);
@@ -74,13 +96,19 @@ define([
 
         return data;
     }
-
+    
     function addStatusTitle(title) {
         $('#status-title').text(title);
     }
 
+    /**
+     * 
+     * Will create the cluster chart.
+     * 
+     * @param {object} data chart.js data object for a bar chart
+     */
     function createGraph(data) {
-        var ctx = document.getElementById('myChart');
+        var ctx = document.getElementById('clusterChart');
         new Chart(ctx, {
             type: 'horizontalBar',
             data: data,
@@ -95,8 +123,7 @@ define([
                             scaleLabel: {
                                 display: true,
                                 labelString: '% Resources'
-                            },
-                            maxBarThickness: 2
+                            }
                         }
                     ],
                     yAxes: [
@@ -109,13 +136,20 @@ define([
         });
     }
 
+    /**
+     * add a 404 message if data could not be retrieved
+     */
+    function add404() {
+        $('#status-title').text('Sorry, we could not retrieve the cluster status. :(')
+    }
+
     function setupDOM() {
         var tab = '<li><a href="#cluster_status" data-toggle="tab">DSMLP Cluster Status</a></li>'
         var html = '<div id="cluster_status" class="tab-pane"> \
                         <div id="chart_container" class="container"> \
-                            <div class="row col-sm-6 col-md-offset-5"> \
-                                <h3 id="status-title">DSMLP Status</h3>\
-                                <canvas id="myChart"></canvas> \
+                            <div class="row col-md-6"> \
+                                <h3 id="status-title"></h3>\
+                                <canvas id="clusterChart"></canvas> \
                             </div> \
                         </div> \
                     </div>'
@@ -134,10 +168,8 @@ define([
                 addStatusTitle(res['title']);
             })
             .catch(function(err) {
-                //  append a sadface 404 thing here
+                add404();
             });
-
-
     }
 
     return {

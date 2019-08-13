@@ -14,11 +14,15 @@ class WebScraper:
     
     @property
     def raw_html(self) -> BeautifulSoup:
-        if not self._raw_html:
-            payload = requests.get(self.site)
-            self._raw_html = BeautifulSoup(payload.text, features='lxml')
-        
-        return self._raw_html
+        try:
+            if not self._raw_html:
+                payload = requests.get(self.site)
+                self._raw_html = BeautifulSoup(payload.text, features='lxml')
+            
+            return self._raw_html
+    
+        except Exception as e:
+            raise Exception('Could not retrieve data from endpoint')
 
     def parse_html(self) -> dict:
         """parse the html table from ets-apps
@@ -51,7 +55,7 @@ class WebScraper:
 
             raise Exception('Could not parse html ', e)
     
-    def sanitize_cluster_data(self, cluster_data: dict):
+    def sanity_check_cluster_data(self, cluster_data: dict):
         """simple sanitization method to make sure the ius site
         did not change format
         
@@ -65,17 +69,19 @@ class WebScraper:
 
         test_set = {'CPU cores', 'GB RAM', 'GPU', 'total pods', 'title'}
 
-        return True if test_set == keys else False
+        if not (test_set == keys):
+            raise Exception(f'Cluster data is not sanitary: {cluster_data}')
 
     def get_cluster_status(self) -> dict:
-        raw_cluster_data = self.parse_html()
+        try:
+            raw_cluster_data = self.parse_html()
 
-        is_sane = self.sanitize_cluster_data(raw_cluster_data)
+            self.sanity_check_cluster_data(raw_cluster_data)
 
-        if is_sane:
             return raw_cluster_data
-
-        raise Exception('Cluster data is improperly formatted: ', raw_cluster_data)
+        
+        except Exception as e:
+            raise e
 
 
         

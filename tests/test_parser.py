@@ -22,7 +22,10 @@ class TestWebScraper(unittest.TestCase):
     def test_sanitize_cluster_data_checks_validity(self):
         raw_cluster_data = self.scraper.parse_html()
 
-        assert self.scraper.sanitize_cluster_data(raw_cluster_data)
+        # this will raise if false
+        self.scraper.sanity_check_cluster_data(raw_cluster_data)
+
+        assert True
 
     def test_get_cluster_status_returns(self):
         cluster_status = self.scraper.get_cluster_status()

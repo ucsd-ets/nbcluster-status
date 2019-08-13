@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# Use this script for development
+
 source bin/activate
 sudo rm -r dist
 python3 setup.py bdist_wheel
@@ -13,5 +17,4 @@ jupyter nbextension uninstall --py nbcluster_status --sys-prefix
 jupyter nbextension install --py nbcluster_status --sys-prefix
 jupyter nbextension enable --py nbcluster_status --sys-prefix
 
-# deactivate
 jupyter notebook

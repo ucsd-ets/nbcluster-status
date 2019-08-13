@@ -8,7 +8,6 @@ lib/
 dist/
 etc/
 *.eggs
-.ipynb_checkpoints/
 *.egg-info
 share/
 *.log
@@ -17,3 +16,5 @@ __pycache__/
 
 # testing
 *.ipynb
+.tox/
+.ipynb_checkpoints/
