@@ -29,7 +29,7 @@ To create a development environment, follow the steps below:
 
 2. Create a virtual environment
 
-    *This virtual environment should be py > 3.6*
+    *This virtual environment should be py >= 3.6*
 
     ```bash
     cd nbcluster-status
