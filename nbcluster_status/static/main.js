@@ -57,7 +57,7 @@ define([
         var cpuCores = (clusterStatus['CPU cores'][0] / clusterStatus['CPU cores'][1] * 100).toPrecision(2);
         var gpuCores = (clusterStatus['GPU'][0] / clusterStatus['GPU'][1] * 100).toPrecision(2);
         var memoryAvailable =  (clusterStatus['GB RAM'][0] / clusterStatus['GB RAM'][1] * 100).toPrecision(2);
-        
+
         var data = {
             labels: ['CPU Cores', 'GPU Cores', 'Memory'],
             datasets: [
