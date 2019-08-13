@@ -12,6 +12,8 @@ etc/
 *.egg-info
 share/
 *.log
+__pycache__/
+*.pyc
 
 # testing
 *.ipynb
