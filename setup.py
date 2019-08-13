@@ -9,6 +9,7 @@ setuptools.setup(
     install_requires=[
         'notebook',
         'jupyterhub',
+        'bs4'
     ],
     package_data = {'nbcluster_status': ['static/*']},
     python_requires = ">=3.5",
