@@ -45,9 +45,11 @@ To create a development environment, follow the steps below:
     source bin/activate
     ```
 
-4. Make your changes to the repo
+4. Install dependencies with ```pip install -r requirements.txt```
 
-5. See local changes by using ```bash deploy.sh```. This will create a local jupyter notebook with nbcluster-status installed.
+5. Make your changes to the repo
+
+6. See local changes by using ```bash deploy.sh```. This will create a local jupyter notebook with nbcluster-status installed.
 
 ## Adding dependencies
 
