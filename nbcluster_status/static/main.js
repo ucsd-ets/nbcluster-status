@@ -122,7 +122,7 @@ define([
                             stacked: true,
                             scaleLabel: {
                                 display: true,
-                                labelString: '% Resources'
+                                labelString: '% Resource Utilization'
                             }
                         }
                     ],
