@@ -11,9 +11,9 @@ define([
      * 
      * @returns {Promise} raw cluster status metrics or a failure message
      */
-    function getClusterStatus() {
+    function getClusterStatus(route) {
         return new Promise(function(resolve, reject) {
-            $.getJSON(utils.get_body_data('baseUrl') + 'clusterstatus/metrics', function(data) {
+            $.getJSON(utils.get_body_data('baseUrl') + 'clusterstatus/' + route, function(data) {
                 resolve(data);
             }).fail(function() {
                 reject('could not retrieve cluster status');
@@ -97,8 +97,8 @@ define([
         return data;
     }
     
-    function addStatusTitle(title) {
-        $('#status-title').text(title);
+    function addStatusTitle(title, elemId) {
+        $(elemId).text(title);
     }
 
     /**
@@ -136,20 +136,31 @@ define([
         });
     }
 
+    function createLineChart(data, elemId, type) {
+        var ctx = document.getElementById(elemId);
+        new Chart(ctx, {
+            type: type,
+            data: data
+        });
+    }
     /**
      * add a 404 message if data could not be retrieved
      */
-    function add404() {
-        $('#status-title').text('Sorry, we could not retrieve the cluster status. :(')
+    function add404(elemId) {
+        $(elemId).text('Sorry, we could not retrieve the cluster status. :(')
     }
 
     function setupDOM() {
         var tab = '<li><a href="#cluster_status" data-toggle="tab">DSMLP Cluster Status</a></li>'
         var html = '<div id="cluster_status" class="tab-pane"> \
                         <div id="chart_container" class="container"> \
-                            <div class="row col-md-6"> \
-                                <h3 id="status-title"></h3>\
+                            <div class="row col-md-4"> \
+                                <h3 id="cluster-title"></h3>\
                                 <canvas id="clusterChart"></canvas> \
+                            </div> \
+                            <div class="row col-md-8"> \
+                                <h3 id="dayTitle"></h3> \
+                                <canvas id="clusterDay"></canvas> \
                             </div> \
                         </div> \
                     </div>'
@@ -160,15 +171,56 @@ define([
 
     function load_ipython_extension() {
         setupDOM();
-
-        getClusterStatus()
+        var clusterTitle = '#cluster-title';
+        var dayTitle = '#dayTitle'
+    
+        getClusterStatus('metrics')
             .then(function(res) {
                 var formattedStatus = formatClusterStatus(res);
                 createGraph(formattedStatus);
-                addStatusTitle(res['title']);
+                addStatusTitle(res['title'], clusterTitle);
             })
             .catch(function(err) {
-                add404();
+                add404(clusterTitle);
+            });
+        
+        getClusterStatus('day')
+            .then(function(res) {
+                var timepoints = res['timepoint']
+                console.log(res['gpu']);
+                var gpu = {
+                    label: '% GPU Utilization',
+                    data: res['gpu'],
+                    fill: false,
+                    borderColor: "rgba(255,0,0,0.2)",
+                    backgroundColor: "rgba(255,0,0,0.2)",
+                    pointBackgroundColor: "rgba(255,0,0,0.2)",
+                    pointFillColor: "rgba(255,0,0,0.2)"
+                    // borderColor:'rgba(255, 255, 255, 0.0)',
+                    // lineColor: 'rgba(255, 255, 255, 0.0)'
+                }
+                var cpu = {
+                    label: '% CPU Utilization',
+                    data: res['cpu'],
+                    fill: false
+                }
+                var memory = {
+                    label: '% Memory Utilization',
+                    data: res['memory'],
+                    fill: false
+                }
+                var allData = {
+                    labels: timepoints,
+                    datasets: [gpu, cpu, memory]
+                }
+
+                addStatusTitle('Every hour at mark 30', dayTitle);
+                createLineChart(allData, 'clusterDay', 'line');
+
+            })
+            .catch(function(err) {
+                console.log(err);
+                add404(dayTitle);
             });
     }
 
