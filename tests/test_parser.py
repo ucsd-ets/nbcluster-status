@@ -30,3 +30,14 @@ class TestWebScraper(unittest.TestCase):
     def test_get_cluster_status_returns(self):
         cluster_status = self.scraper.get_cluster_status()
         assert isinstance(cluster_status, dict)
+
+class TestJsonScraper(unittest.TestCase):
+    def setUp(self):
+        self.dayscraper = parser.JsonScraper('day.json')
+    
+    def test_receives_endpoint(self):
+        data = self.dayscraper.get()
+        print(data)
+        assert isinstance(data, list)
+    
+     

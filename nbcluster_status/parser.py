@@ -2,15 +2,74 @@ from bs4 import BeautifulSoup
 import requests
 from collections import namedtuple
 
-class WebScraper:
+
+class Site:
+    def __init__(self):
+        self._endpoint = None
+
+    @property
+    def baseurl(self) -> str:
+        return 'https://ets-apps.ucsd.edu/datahub/'
+    
+    @property
+    def endpoint(self) -> str:
+        return self._endpoint
+
+    @property
+    def route(self):
+        return self._route
+
+    @route.setter
+    def route(self, route):
+        statuscode = self.test_route(route)
+        if statuscode == 200:
+            self.append_url(route)
+            self._route = route
+        else:
+            raise Exception(f'Could not retrieve data from endpoint {self.baseurl + route}. Status code = {statuscode}')
+
+    def append_url(self, route):
+        self._endpoint = self.baseurl + route
+    
+    def test_route(self, route):
+        req = requests.get(self.baseurl + route)
+        statuscode = req.status_code
+        req.close()
+        return statuscode
+
+class JsonScraper(Site):
+    def __init__(self, route=None):
+        self.route = route
+
+    @property
+    def route(self):
+        return self._route
+
+    @route.setter
+    def route(self, route):
+        self.append_url(route)
+        self._route = route
+
+    def get(self):
+        try:
+            req = requests.get(self.endpoint)
+            jsondata = req.json()
+            req.close()
+            return jsondata
+        except Exception as e:
+            raise Exception(f'Could not retrieve data form endpoint {str(e)}')
+        
+
+class WebScraper(Site):
     """Scrape iusapp for data. Highly coupled to website and current html format as of 8/5/2019 and
     bs4"""
     def __init__(self):
         self._raw_html = None
+        self.route = 'dsmlp-status-summary.html'
 
     @property
     def site(self) -> str:
-        return 'https://ets-apps.ucsd.edu/datahub/dsmlp-status-summary.html'
+        return self.endpoint
     
     @property
     def raw_html(self) -> BeautifulSoup:
@@ -18,7 +77,7 @@ class WebScraper:
             if not self._raw_html:
                 payload = requests.get(self.site)
                 self._raw_html = BeautifulSoup(payload.text, features='lxml')
-            
+                payload.close()
             return self._raw_html
     
         except Exception as e:
