@@ -8,7 +8,6 @@ setuptools.setup(
     description = "Simple Jupyter extension to show how much resources (RAM, GPU) your cluster is using",
     install_requires=[
         'notebook',
-        'jupyterhub',
         'bs4'
     ],
     package_data = {'nbcluster_status': ['static/*']},
