@@ -2,7 +2,9 @@ define([
     'jquery',
     'base/js/utils',
     'base/js/namespace',
-    './Chart'
+    './Chart',
+    './line',
+    './histo'
 ], function($, utils, Jupyter) {
     "use strict";
 
@@ -11,138 +13,20 @@ define([
      * 
      * @returns {Promise} raw cluster status metrics or a failure message
      */
-    function getClusterStatus(route) {
+    function getClusterStatus(endpoint) {
         return new Promise(function(resolve, reject) {
-            $.getJSON(utils.get_body_data('baseUrl') + 'clusterstatus/' + route, function(data) {
+            $.getJSON(utils.get_body_data('baseUrl') + 'clusterstatus/' + endpoint, function(data) {
                 resolve(data);
             }).fail(function() {
                 reject('could not retrieve cluster status');
             });
         });
     }
-    /**
-     * Decide on the color that a particular chart js bar will have.
-     * 
-     * Colors are based off bootstrap 3 theme for bars.
-     * https://www.w3schools.com/bootstrap/bootstrap_progressbars.asp
-     * 
-     * @param {float} inUse percent from 1 - 100 that's in use
-     * @param {boolean} isBackground controls opacity, if true will be lightly opaque
-     * @return {string} string formatted rgba value, ex. rgba(92, 184, 92, 1)
-     */
-    function decideRgbFormat(inUse, isBackground) {
-        if (inUse <= 33.3) {
-            var rgb = 'rgba(92, 184, 92, '
-        } else if (inUse <= 66.6) {
-            var rgb = 'rgba(242, 185, 104, '
-        } else {
-            var rgb = 'rgba(217, 83, 79, '
-        }
 
-        var finalRgb = isBackground ? rgb + '0.2)' : rgb + '1)'
-        
-        return finalRgb
-    }
-
-    /**
-     * 
-     * Will create the data object used by chart.js given the clusterStatus object. Highly
-     * coupled to bar chart and many hardcoded values.
-     * 
-     * @param {object} clusterStatus Retrieved cluster status
-     * @returns {object} the formatted data object for chart.js
-     */
-    function formatClusterStatus(clusterStatus) {
-
-        var cpuCores = (clusterStatus['CPU cores'][0] / clusterStatus['CPU cores'][1] * 100).toPrecision(2);
-        var gpuCores = (clusterStatus['GPU'][0] / clusterStatus['GPU'][1] * 100).toPrecision(2);
-        var memoryAvailable =  (clusterStatus['GB RAM'][0] / clusterStatus['GB RAM'][1] * 100).toPrecision(2);
-
-        var data = {
-            labels: ['CPU Cores', 'GPU Cores', 'Memory'],
-            datasets: [
-                {
-                    label: '% in Use',
-                    data: [cpuCores, gpuCores, memoryAvailable],
-                    backgroundColor: [
-                        decideRgbFormat(cpuCores, true),
-                        decideRgbFormat(gpuCores, true),
-                        decideRgbFormat(memoryAvailable, true),
-                    ],
-                    borderColor: [
-                        decideRgbFormat(cpuCores, false),
-                        decideRgbFormat(gpuCores, false),
-                        decideRgbFormat(memoryAvailable, false),
-                    ],
-                    borderWidth: 1
-                },
-                {
-                    label: '% Available',
-                    data: [100 - cpuCores, 100 - gpuCores, 100 - memoryAvailable],
-                    backgroundColor: [
-                        'rgba(255, 255, 255, 0.0)',
-                        'rgba(255, 255, 255, 0.0)',
-                        'rgba(255, 255, 255, 0.0)',
-                    ],
-                    borderColor: [
-                        'rgba(255, 255, 255, 0.0)',
-                        'rgba(255, 255, 255, 0.0)',
-                        'rgba(255, 255, 255, 0.0)',
-                    ],
-                    borderWidth: 1
-                },            
-            ]            
-        }
-
-        return data;
-    }
-    
     function addStatusTitle(title, elemId) {
         $(elemId).text(title);
     }
 
-    /**
-     * 
-     * Will create the cluster chart.
-     * 
-     * @param {object} data chart.js data object for a bar chart
-     */
-    function createGraph(data) {
-        var ctx = document.getElementById('clusterChart');
-        new Chart(ctx, {
-            type: 'horizontalBar',
-            data: data,
-            options: {
-                legend: {
-                    display: false
-                },
-                scales: {
-                    xAxes: [
-                        {
-                            stacked: true,
-                            scaleLabel: {
-                                display: true,
-                                labelString: '% Resource Utilization'
-                            }
-                        }
-                    ],
-                    yAxes: [
-                        {
-                            stacked: true
-                        }
-                    ]
-                }
-            }
-        });
-    }
-
-    function createLineChart(data, elemId, type) {
-        var ctx = document.getElementById(elemId);
-        new Chart(ctx, {
-            type: type,
-            data: data
-        });
-    }
     /**
      * add a 404 message if data could not be retrieved
      */
@@ -159,10 +43,18 @@ define([
                                 <canvas id="clusterChart"></canvas> \
                             </div> \
                             <div class="row col-md-8"> \
-                                <h3 id="dayTitle"></h3> \
+                                <h3 id="dayTitle" style="text-align: center;"></h3> \
                                 <canvas id="clusterDay"></canvas> \
                             </div> \
-                        </div> \
+                            <div class="row col-md-12"> \
+                                <h3 id="timeseriesTitle" style="text-align: center;"></h3> \
+                                <canvas id="clusterTimeseries"></canvas> \
+                            </div> \
+                            <div class="row col-md-3" style="float: none; margin: 0 auto;"> \
+                                <div> \
+                                <button id="rescale" class="btn btn-primary btn-block">Rescale</button> \
+                                </div> \
+                            </div> \
                     </div>'
 
         $('#tabs').append(tab);
@@ -173,12 +65,32 @@ define([
         setupDOM();
         var clusterTitle = '#cluster-title';
         var dayTitle = '#dayTitle'
+        var timeseriesTitle = '#timeseriesTitle'
     
         getClusterStatus('metrics')
             .then(function(res) {
-                var formattedStatus = formatClusterStatus(res);
-                createGraph(formattedStatus);
+                var cpuCores = (res['CPU cores'][0] / res['CPU cores'][1] * 100).toPrecision(2);
+                var gpuCores = (res['GPU'][0] / res['GPU'][1] * 100).toPrecision(2);
+                var memoryAvailable =  (res['GB RAM'][0] / res['GB RAM'][1] * 100).toPrecision(2);
+
+                var cpu = new Histogram(cpuCores, 'CPU Cores');
+                var gpu = new Histogram(gpuCores, 'GPU Cores');
+                var memory = new Histogram(memoryAvailable, 'Memory');
+
+                var histogramChart = new HistogramChart();
+                histogramChart.setElemId('clusterChart');
+                histogramChart.pushHistogram(cpu);
+                histogramChart.pushHistogram(gpu);
+                histogramChart.pushHistogram(memory);
+
+                histogramChart.create();
                 addStatusTitle(res['title'], clusterTitle);
+
+                $('#rescale').click(function() {
+                    histogramChart.toggleScale();
+                    histogramChart.create();
+                });
+
             })
             .catch(function(err) {
                 add404(clusterTitle);
@@ -186,42 +98,77 @@ define([
         
         getClusterStatus('day')
             .then(function(res) {
-                var timepoints = res['timepoint']
-                console.log(res['gpu']);
-                var gpu = {
-                    label: '% GPU Utilization',
-                    data: res['gpu'],
-                    fill: false,
-                    borderColor: "rgba(255,0,0,0.2)",
-                    backgroundColor: "rgba(255,0,0,0.2)",
-                    pointBackgroundColor: "rgba(255,0,0,0.2)",
-                    pointFillColor: "rgba(255,0,0,0.2)"
-                    // borderColor:'rgba(255, 255, 255, 0.0)',
-                    // lineColor: 'rgba(255, 255, 255, 0.0)'
-                }
-                var cpu = {
-                    label: '% CPU Utilization',
-                    data: res['cpu'],
-                    fill: false
-                }
-                var memory = {
-                    label: '% Memory Utilization',
-                    data: res['memory'],
-                    fill: false
-                }
-                var allData = {
-                    labels: timepoints,
-                    datasets: [gpu, cpu, memory]
-                }
+                var gpuLine = new Line();
+                gpuLine.setAllData(res['gpu']);
+                gpuLine.setRGBAColor('rgba(223, 240, 216, 1)');
+                gpuLine.setLabel('% GPU Utilization');
+                
+                var cpuLine = new Line();
+                cpuLine.setAllData(res['cpu']);
+                cpuLine.setLabel('% CPU Utilization');
+                cpuLine.setRGBAColor('rgba(217, 237, 247, 1)')
+                
+                var memoryLine = new Line();
+                memoryLine.setAllData(res['memory']);
+                memoryLine.setLabel('% Memory Utilization');
+                memoryLine.setRGBAColor('rgba(252, 248, 227, 1)');
 
-                addStatusTitle('Every hour at mark 30', dayTitle);
-                createLineChart(allData, 'clusterDay', 'line');
+                var lineChart = new LineChart();
+                lineChart.pushLine(gpuLine);
+                lineChart.pushLine(cpuLine);
+                lineChart.pushLine(memoryLine);
+                lineChart.setTimepoints(res['timepoint']);
+                lineChart.setElemID('clusterDay');
 
+                addStatusTitle('Resource Usage every hour (PDT)', dayTitle);
+                lineChart.create();
+
+                $('#rescale').click(function() {
+                    lineChart.toggleScale();
+                    lineChart.create();
+                });
             })
             .catch(function(err) {
-                console.log(err);
                 add404(dayTitle);
             });
+
+        getClusterStatus('timeseries')
+            .then(function(res) {
+                var gpuLine = new Line();
+                gpuLine.setAllData(res['gpu']);
+                gpuLine.setRGBAColor('rgba(223, 240, 216, 1)');
+                gpuLine.setLabel('% GPU Utilization');
+                
+                var cpuLine = new Line();
+                cpuLine.setAllData(res['cpu']);
+                cpuLine.setLabel('% CPU Utilization');
+                cpuLine.setRGBAColor('rgba(217, 237, 247, 1)')
+                
+                var memoryLine = new Line();
+                memoryLine.setAllData(res['memory']);
+                memoryLine.setLabel('% Memory Utilization');
+                memoryLine.setRGBAColor('rgba(252, 248, 227, 1)');
+
+                var lineChart = new LineChart();
+                lineChart.pushLine(gpuLine);
+                lineChart.pushLine(cpuLine);
+                lineChart.pushLine(memoryLine);
+                lineChart.setTimepoints(res['timepoint']);
+                lineChart.setElemID('clusterTimeseries');
+
+                addStatusTitle('Peak Usage Per Resource Per Day', timeseriesTitle);
+                lineChart.create();
+
+                $('#rescale').click(function() {
+                    lineChart.toggleScale();
+                    lineChart.create();
+                });
+            })
+            .catch(function(err) {
+                add404(timeseriesTitle);
+            });
+
+
     }
 
     return {

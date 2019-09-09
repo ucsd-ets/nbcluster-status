@@ -63,14 +63,28 @@ def json_handler(endpoint):
 class DayHandler(IPythonHandler):
     @web.authenticated
     def get(self):
-        data = json_handler('day.json')
-        self.write(data)
+        req = JsonScraper('day.json')
+        jsonlist = req.get()
+        round_out = lambda x: round(x * 100, 2)
+        timeonly = lambda x: x.split(' ')[-1]
+        gpu = extract_resource(jsonlist, 'gpu', round_out)
+        cpu = extract_resource(jsonlist, 'cpu', round_out)
+        mem = extract_resource(jsonlist, 'memory', round_out)
+        timepoint = extract_resource(jsonlist, 'timepoint', timeonly)
+        self.write({'gpu': gpu, 'cpu': cpu, 'memory': mem, 'timepoint': timepoint})
 
 class TimeseriesHandler(IPythonHandler):
     @web.authenticated
     def get(self):
-        data = json_handler('timeseries.json')
-        self.write(data)
+        req = JsonScraper('timeseries.json')
+        jsonlist = req.get()
+        round_out = lambda x: round(x * 100, 2)
+        timeonly = lambda x: x
+        gpu = extract_resource(jsonlist, 'gpu', round_out)
+        cpu = extract_resource(jsonlist, 'cpu', round_out)
+        mem = extract_resource(jsonlist, 'memory', round_out)
+        timepoint = extract_resource(jsonlist, 'timepoint', timeonly)
+        self.write({'gpu': gpu, 'cpu': cpu, 'memory': mem, 'timepoint': timepoint})
 
 class CustomChartCSS(IPythonHandler):
     def get(self):
