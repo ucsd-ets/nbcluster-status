@@ -72,7 +72,7 @@ var HistogramChart = (function() {
 
         var whiteColors = this.histograms.map(function(histo) {
             return 'rgba(255, 255, 255, 0.0)'
-        })
+        });
 
         var datasets = [
             {
@@ -151,90 +151,3 @@ var Histogram = (function() {
 
     return Histogram;
 })();
-/**
- * 
- * Will create the data object used by chart.js given the clusterStatus object. Highly
- * coupled to bar chart and many hardcoded values.
- * 
- * @param {object} clusterStatus Retrieved cluster status
- * @returns {object} the formatted data object for chart.js
- */
-// function formatClusterStatus(clusterStatus) {
-
-//     var cpuCores = (clusterStatus['CPU cores'][0] / clusterStatus['CPU cores'][1] * 100).toPrecision(2);
-//     var gpuCores = (clusterStatus['GPU'][0] / clusterStatus['GPU'][1] * 100).toPrecision(2);
-//     var memoryAvailable =  (clusterStatus['GB RAM'][0] / clusterStatus['GB RAM'][1] * 100).toPrecision(2);
-
-//     var data = {
-//         labels: ['CPU Cores', 'GPU Cores', 'Memory'],
-//         datasets: [
-//             {
-//                 label: '% in Use',
-//                 data: [cpuCores, gpuCores, memoryAvailable],
-//                 backgroundColor: [
-//                     decideRgbFormat(cpuCores, true),
-//                     decideRgbFormat(gpuCores, true),
-//                     decideRgbFormat(memoryAvailable, true),
-//                 ],
-//                 borderColor: [
-//                     decideRgbFormat(cpuCores, false),
-//                     decideRgbFormat(gpuCores, false),
-//                     decideRgbFormat(memoryAvailable, false),
-//                 ],
-//                 borderWidth: 1
-//             },
-//             {
-//                 label: '% Available',
-//                 data: [100 - cpuCores, 100 - gpuCores, 100 - memoryAvailable],
-//                 backgroundColor: [
-//                     'rgba(255, 255, 255, 0.0)',
-//                     'rgba(255, 255, 255, 0.0)',
-//                     'rgba(255, 255, 255, 0.0)',
-//                 ],
-//                 borderColor: [
-//                     'rgba(255, 255, 255, 0.0)',
-//                     'rgba(255, 255, 255, 0.0)',
-//                     'rgba(255, 255, 255, 0.0)',
-//                 ],
-//                 borderWidth: 1
-//             },            
-//         ]            
-//     }
-
-//     return data;
-// }
-
-//     /**
-//      * 
-//      * Will create the cluster chart.
-//      * 
-//      * @param {object} data chart.js data object for a bar chart
-//      */
-//     function createGraph(data) {
-//         var ctx = document.getElementById('clusterChart');
-//         new Chart(ctx, {
-//             type: 'horizontalBar',
-//             data: data,
-//             options: {
-//                 legend: {
-//                     display: false
-//                 },
-//                 scales: {
-//                     xAxes: [
-//                         {
-//                             stacked: true,
-//                             scaleLabel: {
-//                                 display: true,
-//                                 labelString: '% Resource Utilization'
-//                             }
-//                         }
-//                     ],
-//                     yAxes: [
-//                         {
-//                             stacked: true
-//                         }
-//                     ]
-//                 }
-//             }
-//         });
-//     }

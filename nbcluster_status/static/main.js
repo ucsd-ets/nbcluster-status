@@ -31,7 +31,8 @@ define([
      * add a 404 message if data could not be retrieved
      */
     function add404(elemId) {
-        $(elemId).text('Sorry, we could not retrieve the cluster status. :(')
+        $(elemId).text('Sorry, we could not retrieve the cluster status.');
+        $(elemId).append('<p>&#128542;</p>');
     }
 
     function setupDOM() {
@@ -55,17 +56,56 @@ define([
                                 <button id="rescale" class="btn btn-primary btn-block">Rescale</button> \
                                 </div> \
                             </div> \
+                            <div class="row col-md-12"> \
+                                <h3 id="everythingDownTitle" style="text-align: center;"></h3> \
+                            </div> \
                     </div>'
 
         $('#tabs').append(tab);
         $('.tab-content').append(html)
     }
 
+    var DownedResource = (function() {
+
+        function DownedResource() {
+            this.total = 0;
+            this.errorMessageIds = [];
+            this.everythingDownId = '#everythingDownTitle';
+        }
+
+        DownedResource.prototype.increment = function() {
+            this.total = this.total + 1;
+    
+            if (this.total === this.errorMessageIds.length) {
+                $('#rescale').remove();
+
+                this.errorMessageIds.forEach(function(errId) {
+                    $(errId).remove();
+                });
+                
+                add404(this.everythingDownId);
+                
+            }
+            
+
+        }
+
+        DownedResource.prototype.pushErrorMessageId = function(errId) {
+            this.errorMessageIds.push(errId);
+        }
+
+        return DownedResource;
+    })();
+
     function load_ipython_extension() {
         setupDOM();
         var clusterTitle = '#cluster-title';
-        var dayTitle = '#dayTitle'
-        var timeseriesTitle = '#timeseriesTitle'
+        var dayTitle = '#dayTitle';
+        var timeseriesTitle = '#timeseriesTitle';
+        var downedResource = new DownedResource();
+        downedResource.pushErrorMessageId(clusterTitle);
+        downedResource.pushErrorMessageId(dayTitle);
+        downedResource.pushErrorMessageId(timeseriesTitle);
     
         getClusterStatus('metrics')
             .then(function(res) {
@@ -94,6 +134,7 @@ define([
             })
             .catch(function(err) {
                 add404(clusterTitle);
+                downedResource.increment();
             });
         
         getClusterStatus('day')
@@ -130,6 +171,7 @@ define([
             })
             .catch(function(err) {
                 add404(dayTitle);
+                downedResource.increment();
             });
 
         getClusterStatus('timeseries')
@@ -162,13 +204,13 @@ define([
                 $('#rescale').click(function() {
                     lineChart.toggleScale();
                     lineChart.create();
+
                 });
             })
             .catch(function(err) {
                 add404(timeseriesTitle);
+                downedResource.increment();
             });
-
-
     }
 
     return {
