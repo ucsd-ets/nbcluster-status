@@ -161,7 +161,7 @@ define([
                 lineChart.setTimepoints(res['timepoint']);
                 lineChart.setElemID('clusterDay');
 
-                addStatusTitle('Resource Usage every hour (PDT)', dayTitle);
+                addStatusTitle('Resource utilization per hour (PDT)', dayTitle);
                 lineChart.create();
 
                 $('#rescale').click(function() {
@@ -198,7 +198,7 @@ define([
                 lineChart.setTimepoints(res['timepoint']);
                 lineChart.setElemID('clusterTimeseries');
 
-                addStatusTitle('Peak Usage Per Resource Per Day', timeseriesTitle);
+                addStatusTitle('Peak utilization per resource per day', timeseriesTitle);
                 lineChart.create();
 
                 $('#rescale').click(function() {
