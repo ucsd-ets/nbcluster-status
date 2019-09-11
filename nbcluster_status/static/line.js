@@ -36,6 +36,20 @@ var LineChart = (function() {
         this.setMax = this.setMax ? false : true;
     }
 
+    LineChart.prototype.isData = function() {
+        var isData = false;
+
+        this.lines.forEach(function(line) {
+            console.log(line);
+            if (line.data.length > 1) {
+                // there's at least 1 line that has data
+                isData = true;
+            }
+        });
+
+        return isData;
+    }
+
     LineChart.prototype.createChartData = function() {
         var data = {
             labels: this.timepoints,
@@ -83,6 +97,13 @@ function Line() {
 
     Line.prototype.setLabel = function(label) {
         this.label = label;
+    }
+
+    Line.prototype.isData = function() {
+        if (this.data.length > 1) {
+            return true;
+        } 
+        return false;
     }
 
     Line.prototype.pushData = function(elem) {

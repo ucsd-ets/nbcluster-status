@@ -51,7 +51,7 @@ define([
                                 <h3 id="timeseriesTitle" style="text-align: center;"></h3> \
                                 <canvas id="clusterTimeseries"></canvas> \
                             </div> \
-                            <div class="row col-md-3" style="float: none; margin: 0 auto;"> \
+                            <div class="row col-md-6" style="float: none; margin: 0 auto;"> \
                                 <div> \
                                 <button id="rescale" class="btn btn-primary btn-block">Rescale</button> \
                                 </div> \
@@ -86,8 +86,6 @@ define([
                 add404(this.everythingDownId);
                 
             }
-            
-
         }
 
         DownedResource.prototype.pushErrorMessageId = function(errId) {
@@ -161,13 +159,16 @@ define([
                 lineChart.setTimepoints(res['timepoint']);
                 lineChart.setElemID('clusterDay');
 
-                addStatusTitle('Resource utilization per hour (PDT)', dayTitle);
-                lineChart.create();
+                
 
-                $('#rescale').click(function() {
-                    lineChart.toggleScale();
+                if (lineChart.isData()) {
+                    addStatusTitle('Resource utilization per hour (PDT)', dayTitle);
                     lineChart.create();
-                });
+                    $('#rescale').click(function() {
+                        lineChart.toggleScale();
+                        lineChart.create();
+                    });
+                }
             })
             .catch(function(err) {
                 add404(dayTitle);
@@ -197,15 +198,18 @@ define([
                 lineChart.pushLine(memoryLine);
                 lineChart.setTimepoints(res['timepoint']);
                 lineChart.setElemID('clusterTimeseries');
-
-                addStatusTitle('Peak utilization per resource per day', timeseriesTitle);
-                lineChart.create();
-
-                $('#rescale').click(function() {
-                    lineChart.toggleScale();
+                
+                if (lineChart.isData()) {
+                    addStatusTitle('Peak utilization per resource per day', timeseriesTitle);
                     lineChart.create();
+    
+                    $('#rescale').click(function() {
+                        lineChart.toggleScale();
+                        lineChart.create();
+    
+                    });
+                }
 
-                });
             })
             .catch(function(err) {
                 add404(timeseriesTitle);
