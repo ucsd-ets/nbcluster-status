@@ -37,7 +37,6 @@ class TestJsonScraper(unittest.TestCase):
     
     def test_receives_endpoint(self):
         data = self.dayscraper.get()
-        print(data)
         assert isinstance(data, list)
     
      

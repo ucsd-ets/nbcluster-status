@@ -40,7 +40,6 @@ var LineChart = (function() {
         var isData = false;
 
         this.lines.forEach(function(line) {
-            console.log(line);
             if (line.data.length > 1) {
                 // there's at least 1 line that has data
                 isData = true;
