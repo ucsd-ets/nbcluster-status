@@ -36,7 +36,7 @@ define([
     }
 
     function setupDOM() {
-        var tab = '<li><a href="#cluster_status" data-toggle="tab">DSMLP Cluster Status</a></li>'
+        var tab = '<li><a href="#cluster_status" data-toggle="tab">DSMLP Cluster History</a></li>'
         var html = '<div id="cluster_status" class="tab-pane"> \
                         <div id="chart_container" class="container"> \
                             <div class="row col-md-4"> \
@@ -177,6 +177,7 @@ define([
 
         getClusterStatus('timeseries')
             .then(function(res) {
+                console.log('here ', res);
                 var gpuLine = new Line();
                 gpuLine.setAllData(res['gpu']);
                 gpuLine.setRGBAColor('rgba(223, 240, 216, 1)');
