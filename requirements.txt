@@ -40,7 +40,7 @@ nbcluster-status==0.0.0
 nbconvert==5.5.0
 nbformat==4.4.0
 nbresuse==0.3.2
-notebook==5.7.8
+notebook==6.1.5
 oauthlib==3.1.0
 packaging==19.1
 pamela==1.0.0
